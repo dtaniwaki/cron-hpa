@@ -1,0 +1,16 @@
+domain: dtaniwaki.github.com
+layout:
+- go.kubebuilder.io/v3
+projectName: cron-hpa
+repo: github.com/dtaniwaki/cron-hpa
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dtaniwaki.github.com
+  group: cronhpa
+  kind: CronHorizontalPodAutoscaler
+  path: github.com/dtaniwaki/cron-hpa/api/v1alpha1
+  version: v1alpha1
+version: "3"

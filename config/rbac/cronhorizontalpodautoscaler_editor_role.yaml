@@ -1,0 +1,24 @@
+# permissions for end users to edit cronhorizontalpodautoscalers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cronhorizontalpodautoscaler-editor-role
+rules:
+- apiGroups:
+  - cronhpa.dtaniwaki.github.com
+  resources:
+  - cronhorizontalpodautoscalers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cronhpa.dtaniwaki.github.com
+  resources:
+  - cronhorizontalpodautoscalers/status
+  verbs:
+  - get

@@ -1,0 +1,7 @@
+apiVersion: cronhpa.dtaniwaki.github.com/v1alpha1
+kind: CronHorizontalPodAutoscaler
+metadata:
+  name: cronhorizontalpodautoscaler-sample
+spec:
+  # Add fields here
+  foo: bar
