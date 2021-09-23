@@ -24,5 +24,8 @@ testbin/*
 *.swo
 *~
 
+# goenv
+.go-version
+
 # Misc
 .vscode/
