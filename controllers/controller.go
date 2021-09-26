@@ -95,7 +95,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 			return ctrl.Result{}, err
 		}
 		// Create the default HPA.
-		if err := cronhpa.CreateOrUpdateHPA(ctx, "", r); err != nil {
+		if err := cronhpa.CreateOrPatchHPA(ctx, "", r); err != nil {
 			return ctrl.Result{}, err
 		}
 	}

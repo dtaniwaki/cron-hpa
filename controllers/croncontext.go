@@ -47,7 +47,7 @@ func (cronctx *CronContext) Run() {
 		panic(err)
 	}
 
-	if err := cronhpa.CreateOrUpdateHPA(ctx, cronctx.patchName, cronctx.reconciler); err != nil {
+	if err := cronhpa.CreateOrPatchHPA(ctx, cronctx.patchName, cronctx.reconciler); err != nil {
 		panic(err)
 	}
 }

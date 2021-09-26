@@ -90,7 +90,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa 
 	// Apply patches on the template.
 	if scheduledPatch.Patch != nil {
 		if scheduledPatch.Patch.MinReplicas != nil {
-			hpa.Spec.MinReplicas = scheduledPatch.Patch.MinReplicas
+			*hpa.Spec.MinReplicas = *scheduledPatch.Patch.MinReplicas
 		}
 		if scheduledPatch.Patch.MaxReplicas != nil {
 			hpa.Spec.MaxReplicas = *scheduledPatch.Patch.MaxReplicas
@@ -112,7 +112,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscali
 			Name:      cronhpa.Name,
 			Namespace: cronhpa.Namespace,
 		},
-		Spec: *template.Spec.DeepCopy(),
+		Spec: template.Spec,
 	}
 	if template.Metadata != nil {
 		hpa.ObjectMeta.Labels = template.Metadata.Labels
@@ -126,13 +126,13 @@ func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscali
 	return hpa, nil
 }
 
-func (cronhpa *CronHorizontalPodAutoscaler) CreateOrUpdateHPA(ctx context.Context, patchName string, reconciler *CronHorizontalPodAutoscalerReconciler) error {
+func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context, patchName string, reconciler *CronHorizontalPodAutoscalerReconciler) error {
 	logger := log.FromContext(ctx)
 	hpa, err := cronhpa.NewHPA(patchName)
 	if err != nil {
 		return err
 	}
-	op, err := controllerutil.CreateOrUpdate(ctx, reconciler.Client, hpa, func() error {
+	op, err := controllerutil.CreateOrPatch(ctx, reconciler.Client, hpa, func() error {
 		if err := controllerutil.SetControllerReference(cronhpa.ToCompatible(), hpa, reconciler.Client.Scheme()); err != nil {
 			return err
 		}
@@ -141,6 +141,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrUpdateHPA(ctx context.Contex
 	if err != nil {
 		return err
 	}
+
 	event := ""
 	msg := ""
 	if op == controllerutil.OperationResultCreated {
