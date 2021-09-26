@@ -26,7 +26,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - cronhpa.dtaniwaki.github.com
+  - cron-hpa.dtaniwaki.github.com
   resources:
   - cronhorizontalpodautoscalers
   verbs:
@@ -38,13 +38,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - cronhpa.dtaniwaki.github.com
+  - cron-hpa.dtaniwaki.github.com
   resources:
   - cronhorizontalpodautoscalers/finalizers
   verbs:
   - update
 - apiGroups:
-  - cronhpa.dtaniwaki.github.com
+  - cron-hpa.dtaniwaki.github.com
   resources:
   - cronhorizontalpodautoscalers/status
   verbs:

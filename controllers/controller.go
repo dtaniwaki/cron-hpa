@@ -40,11 +40,11 @@ type CronHorizontalPodAutoscalerReconciler struct {
 	Cron     *Cron
 }
 
-const finalizerName = "cronhpa.dtaniwaki.github.com/finalizer"
+const finalizerName = "cron-hpa.dtaniwaki.github.com/finalizer"
 
-//+kubebuilder:rbac:groups=cronhpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cronhpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cronhpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cron-hpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cron-hpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cron-hpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers/finalizers,verbs=update
 //+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
