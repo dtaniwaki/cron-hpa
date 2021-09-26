@@ -92,7 +92,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa 
 			hpa.Spec.MinReplicas = scheduledPatch.Patch.MinReplicas
 		}
 		if scheduledPatch.Patch.MaxReplicas != nil {
-			hpa.Spec.MinReplicas = scheduledPatch.Patch.MaxReplicas
+			hpa.Spec.MaxReplicas = *scheduledPatch.Patch.MaxReplicas
 		}
 		if scheduledPatch.Patch.Metrics != nil {
 			hpa.Spec.Metrics = make([]autoscalingv2beta2.MetricSpec, len(scheduledPatch.Patch.Metrics))
