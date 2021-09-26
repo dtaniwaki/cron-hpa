@@ -105,7 +105,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa 
 	return nil
 }
 
-func (cronhpa *CronHorizontalPodAutoscaler) NewHPA() *autoscalingv2beta2.HorizontalPodAutoscaler {
+func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
 	template := cronhpa.Spec.Template.DeepCopy()
 	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
@@ -118,16 +118,19 @@ func (cronhpa *CronHorizontalPodAutoscaler) NewHPA() *autoscalingv2beta2.Horizon
 		hpa.ObjectMeta.Labels = template.Metadata.Labels
 		hpa.ObjectMeta.Annotations = template.Metadata.Annotations
 	}
-	return hpa
+	if patchName != "" {
+		if err := cronhpa.ApplyHPAPatch(patchName, hpa); err != nil {
+			return nil, err
+		}
+	}
+	return hpa, nil
 }
 
 func (cronhpa *CronHorizontalPodAutoscaler) CreateOrUpdateHPA(ctx context.Context, patchName string, reconciler *CronHorizontalPodAutoscalerReconciler) error {
 	logger := log.FromContext(ctx)
-	hpa := cronhpa.NewHPA()
-	if patchName != "" {
-		if err := cronhpa.ApplyHPAPatch(patchName, hpa); err != nil {
-			return err
-		}
+	hpa, err := cronhpa.NewHPA(patchName)
+	if err != nil {
+		return err
 	}
 	op, err := controllerutil.CreateOrUpdate(ctx, reconciler.Client, hpa, func() error {
 		if err := controllerutil.SetControllerReference(cronhpa.ToCompatible(), hpa, reconciler.Client.Scheme()); err != nil {
