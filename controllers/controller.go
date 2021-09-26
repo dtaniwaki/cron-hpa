@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -64,13 +65,13 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 
 	// Handle deleted resources.
 	if !cronhpa.ObjectMeta.DeletionTimestamp.IsZero() {
-		if containsString(cronhpa.ObjectMeta.Finalizers, finalizerName) {
+		if controllerutil.ContainsFinalizer(cronhpa.ToCompatible(), finalizerName) {
 			logger.Info(fmt.Sprintf("Clear schedules of %s in %s", cronhpa.Name, cronhpa.Namespace))
 			if err := cronhpa.ClearSchedules(ctx, r); err != nil {
 				logger.Error(err, "Failed to clear schedules")
 			}
 
-			cronhpa.ObjectMeta.Finalizers = removeString(cronhpa.ObjectMeta.Finalizers, finalizerName)
+			controllerutil.RemoveFinalizer(cronhpa.ToCompatible(), finalizerName)
 			if err := r.Update(ctx, cronhpa.ToCompatible()); err != nil {
 				return reconcile.Result{}, err
 			}
@@ -79,7 +80,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 	}
 
 	// Set finalizer.
-	if !containsString(cronhpa.ObjectMeta.Finalizers, finalizerName) {
+	if !controllerutil.ContainsFinalizer(cronhpa.ToCompatible(), finalizerName) {
 		logger.Info(fmt.Sprintf("Set finalizer on %s in %s", cronhpa.Name, cronhpa.Namespace))
 		cronhpa.ObjectMeta.Finalizers = append(cronhpa.ObjectMeta.Finalizers, finalizerName)
 		if err := r.Update(ctx, cronhpa.ToCompatible()); err != nil {
