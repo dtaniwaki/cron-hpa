@@ -21,3 +21,11 @@ Deploy a controller to the cluster.
 ```bash
 $ make deploy
 ```
+
+Now, deploy the samples.
+
+```bash
+$ make deploy-samples
+```
+
+You will see sample HPA and deployment in the current context, maybe `default` depending on your env. The HPA resource gets updated periodically by the CronHPA.
