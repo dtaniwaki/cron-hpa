@@ -89,7 +89,7 @@ func main() {
 		Cron:     cron,
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("cronhpa-controller"),
+		Recorder: mgr.GetEventRecorderFor("cron-hpa-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CronHorizontalPodAutoscaler")
 		os.Exit(1)

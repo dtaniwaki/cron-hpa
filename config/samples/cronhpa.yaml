@@ -1,14 +1,14 @@
 apiVersion: cron-hpa.dtaniwaki.github.com/v1alpha1
 kind: CronHorizontalPodAutoscaler
 metadata:
-  name: cronhpa-sample
+  name: cron-hpa-sample
 spec:
   template:
     spec:
       scaleTargetRef:
         apiVersion: apps/v1
         kind: Deployment
-        name: cronhpa-nginx
+        name: cron-hpa-nginx
       minReplicas: 1
       maxReplicas: 10
       metrics:

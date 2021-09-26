@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cronhpa-nginx
+  name: cron-hpa-nginx
 spec:
   replicas: 1
   selector:
