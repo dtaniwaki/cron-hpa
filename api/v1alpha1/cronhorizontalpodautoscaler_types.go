@@ -54,6 +54,7 @@ type HPAPatch struct {
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
 	// maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
 	// It cannot be less that minReplicas.
+	// +optional
 	MaxReplicas *int32 `json:"maxReplicas,omitempty"`
 	// metrics contains the specifications for which to use to calculate the
 	// desired replica count (the maximum replica count across all metrics will
