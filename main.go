@@ -78,9 +78,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	cron := controllers.NewCron()
+	cron.Start()
+
+	defer func() {
+		cron.Stop()
+	}()
+
 	if err = (&controllers.CronHorizontalPodAutoscalerReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Cron:     cron,
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("cronhpa-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CronHorizontalPodAutoscaler")
 		os.Exit(1)
