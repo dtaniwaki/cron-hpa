@@ -133,10 +133,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		return err
 	}
 	op, err := controllerutil.CreateOrPatch(ctx, reconciler.Client, hpa, func() error {
-		if err := controllerutil.SetControllerReference(cronhpa.ToCompatible(), hpa, reconciler.Client.Scheme()); err != nil {
-			return err
-		}
-		return nil
+		return controllerutil.SetControllerReference(cronhpa.ToCompatible(), hpa, reconciler.Scheme)
 	})
 	if err != nil {
 		return err
@@ -152,15 +149,17 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		logger.Info(fmt.Sprintf("Updated an HPA successfully: %s in %s", cronhpa.Name, cronhpa.Namespace))
 		event = CronHPAEventUpdated
 		msg = fmt.Sprintf("Updated HPA %s", hpa.Name)
-	} else {
+	} else if op != controllerutil.OperationResultNone {
 		logger.Info(fmt.Sprintf("Updated an HPA without changes: %s in %s", cronhpa.Name, cronhpa.Namespace))
 		event = CronHPAEventUpdated
 		msg = fmt.Sprintf("Updated HPA %s without changes", hpa.Name)
 	}
-	if msg != "" && patchName != "" {
-		msg = fmt.Sprintf("%s with %s", msg, patchName)
+	if event != "" {
+		if patchName != "" {
+			msg = fmt.Sprintf("%s with %s", msg, patchName)
+		}
+		reconciler.Recorder.Event((*cronhpav1alpha1.CronHorizontalPodAutoscaler)(cronhpa), corev1.EventTypeNormal, event, msg)
 	}
-	reconciler.Recorder.Event((*cronhpav1alpha1.CronHorizontalPodAutoscaler)(cronhpa), corev1.EventTypeNormal, event, msg)
 	return nil
 }
 
