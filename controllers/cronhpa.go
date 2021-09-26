@@ -80,6 +80,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa 
 	for _, sp := range cronhpa.Spec.ScheduledPatches {
 		if sp.Name == patchName {
 			scheduledPatch = &sp
+			break
 		}
 	}
 	if scheduledPatch == nil {
