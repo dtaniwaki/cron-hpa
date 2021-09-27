@@ -5,6 +5,10 @@
 
 CronHPA is an operator to update HPA resources based on schedules. For example, you can decrease min replicas in the night-time and increase it in the day-time.
 
+## Prerequisites
+
+- [golangci-lint v2.5.2](https://github.com/golangci/golangci-lint-action)
+
 ## Build
 
 Build and load the Docker image to your cluster.
