@@ -5,6 +5,42 @@
 
 CronHPA is an operator to update HPA resources based on schedules. For example, you can decrease min replicas in the night-time and increase it in the day-time.
 
+Here's a `CronHPA` example.
+
+```yaml
+apiVersion: cron-hpa.dtaniwaki.github.com/v1alpha1
+kind: CronHorizontalPodAutoscaler
+metadata:
+  name: cron-hpa-example
+spec:
+  template:
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: cron-hpa-nginx
+      minReplicas: 3
+      maxReplicas: 10
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 50
+  scheduledPatches:
+  - name: daytime
+    schedule: "0 8 * * *"
+    timezone: "Asia/Tokyo"
+    patch:
+      minReplicas: 3
+  - name: nighttime
+    schedule: "0 22 * * *"
+    timezone: "Asia/Tokyo"
+    patch:
+      minReplicas: 1
+```
+
 ## Prerequisites
 
 - [golangci-lint v2.5.2](https://github.com/golangci/golangci-lint-action)
