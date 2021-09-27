@@ -158,7 +158,6 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		event = CronHPAEventCreated
 		msg = fmt.Sprintf("Created HPA %s", newhpa.Name)
 	} else {
-		logger.Info(fmt.Sprintf("old %d, new %d", *hpa.Spec.MinReplicas, *newhpa.Spec.MinReplicas))
 		if reflect.DeepEqual(hpa.Spec, newhpa.Spec) {
 			logger.Info(fmt.Sprintf("Updated an HPA without changes: %s in %s", cronhpa.Name, cronhpa.Namespace))
 			event = CronHPAEventUpdated
