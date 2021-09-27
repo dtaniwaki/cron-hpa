@@ -19,7 +19,7 @@ spec:
         apiVersion: apps/v1
         kind: Deployment
         name: cron-hpa-nginx
-      minReplicas: 3
+      minReplicas: 1
       maxReplicas: 10
       metrics:
       - type: Resource
@@ -32,13 +32,17 @@ spec:
   - name: daytime
     schedule: "0 8 * * *"
     timezone: "Asia/Tokyo"
-    patch:
-      minReplicas: 3
   - name: nighttime
     schedule: "0 22 * * *"
     timezone: "Asia/Tokyo"
     patch:
-      minReplicas: 1
+      minReplicas: 1 # Less minimum replicas.
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 70 # More conservative scaling.
 ```
 
 ## Prerequisites
