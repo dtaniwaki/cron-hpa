@@ -45,12 +45,13 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 
 fmt: ## Run go fmt against code.
 	go fmt ./...
+	golangci-lint run --fix
 
 vet: ## Run go vet against code.
 	go vet ./...
 
 lint: ## Run golangci-lint
-	golangci-lint
+	golangci-lint run
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test: manifests generate fmt vet ## Run tests.
