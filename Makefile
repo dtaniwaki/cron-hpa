@@ -45,12 +45,14 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 
 fmt: ## Run go fmt against code.
 	go fmt ./...
-	golangci-lint run --fix
 
 vet: ## Run go vet against code.
 	go vet ./...
 
-lint: ## Run golangci-lint
+fix-lint: ## Fix lint issues of golangci-lint.
+	golangci-lint run --fix
+
+lint: ## Run golangci-lint.
 	golangci-lint run
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
