@@ -17,11 +17,12 @@ limitations under the License.
 package controllers
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/go-yaml/yaml"
 	"github.com/stretchr/testify/assert"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	"sigs.k8s.io/yaml"
 )
 
 func TestNewHPA(t *testing.T) {
@@ -30,6 +31,7 @@ apiVersion: cron-hpa.dtaniwaki.github.com/v1alpha1
 kind: CronHorizontalPodAutoscaler
 metadata:
   name: cron-hpa-sample
+  namespace: default
 spec:
   template:
     spec:
@@ -52,7 +54,7 @@ spec:
     timezone: "Asia/Tokyo"
     patch:
       minReplicas: 3
-      maxReplicas: 3
+      maxReplicas: 15
       metrics:
       - type: Resource
         resource:
@@ -64,7 +66,9 @@ spec:
 
 	cronhpa := &CronHorizontalPodAutoscaler{}
 	err := yaml.Unmarshal([]byte(cronHPAManifest), cronhpa.ToCompatible())
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
 
 	defaultHPAManifest := `
 apiVersion: autoscaling/v2beta2
@@ -74,27 +78,35 @@ metadata:
   namespace: default
 spec:
   scaleTargetRef:
-  apiVersion: apps/v1
-  kind: Deployment
-  name: cron-hpa-nginx
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cron-hpa-nginx
   minReplicas: 1
   maxReplicas: 10
   metrics:
   - type: Resource
     resource:
-	  name: cpu
-	  target:
-	  type: Utilization
-	  averageUtilization: 50
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
 `
 
 	defaultHPA := &autoscalingv2beta2.HorizontalPodAutoscaler{}
 	err = yaml.Unmarshal([]byte(defaultHPAManifest), defaultHPA)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
 
 	hpa, err := cronhpa.NewHPA("")
-	assert.NoError(t, err)
-	assert.Equal(t, defaultHPA, hpa)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	fmt.Printf("kind %s %s\n", defaultHPA.Kind, hpa.Kind)
+	fmt.Printf("kind %s %s\n", defaultHPA.TypeMeta.Kind, hpa.TypeMeta.Kind)
+	if !assert.Equal(t, defaultHPA, hpa) {
+		t.FailNow()
+	}
 
 	withPatchHPAManifest := `
 apiVersion: autoscaling/v2beta2
@@ -104,25 +116,31 @@ metadata:
   namespace: default
 spec:
   scaleTargetRef:
-  apiVersion: apps/v1
-  kind: Deployment
-  name: cron-hpa-nginx
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cron-hpa-nginx
   minReplicas: 3
   maxReplicas: 15
   metrics:
   - type: Resource
     resource:
-	  name: cpu
-	  target:
-	  type: Utilization
-	  averageUtilization: 30
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 30
 `
 
 	withPatchHPA := &autoscalingv2beta2.HorizontalPodAutoscaler{}
 	err = yaml.Unmarshal([]byte(withPatchHPAManifest), withPatchHPA)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
 
 	hpa, err = cronhpa.NewHPA("one")
-	assert.NoError(t, err)
-	assert.Equal(t, withPatchHPA, hpa)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, withPatchHPA, hpa) {
+		t.FailNow()
+	}
 }
