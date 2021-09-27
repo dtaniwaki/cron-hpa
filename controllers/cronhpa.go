@@ -19,14 +19,17 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/dtaniwaki/cron-hpa/api/v1alpha1"
 	cronhpav1alpha1 "github.com/dtaniwaki/cron-hpa/api/v1alpha1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -108,6 +111,10 @@ func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa 
 func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
 	template := cronhpa.Spec.Template.DeepCopy()
 	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "HorizontalPodAutoscaler",
+			APIVersion: autoscalingv2beta2.SchemeGroupVersion.Identifier(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cronhpa.Name,
 			Namespace: cronhpa.Namespace,
@@ -128,37 +135,50 @@ func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscali
 
 func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context, patchName string, reconciler *CronHorizontalPodAutoscalerReconciler) error {
 	logger := log.FromContext(ctx)
-	hpa, err := cronhpa.NewHPA(patchName)
+
+	newhpa, err := cronhpa.NewHPA(patchName)
 	if err != nil {
 		return err
 	}
-	op, err := controllerutil.CreateOrPatch(ctx, reconciler.Client, hpa, func() error {
-		return controllerutil.SetControllerReference(cronhpa.ToCompatible(), hpa, reconciler.Scheme)
-	})
-	if err != nil {
+	if err := controllerutil.SetControllerReference(cronhpa.ToCompatible(), newhpa, reconciler.Scheme); err != nil {
 		return err
 	}
 
 	event := ""
 	msg := ""
-	if op == controllerutil.OperationResultCreated {
+	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	if err := reconciler.Get(ctx, cronhpa.ToNamespacedName(), hpa); err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		}
+		if err := reconciler.Create(ctx, newhpa); err != nil {
+			return err
+		}
 		logger.Info(fmt.Sprintf("Created an HPA successfully: %s in %s", cronhpa.Name, cronhpa.Namespace))
 		event = CronHPAEventCreated
-		msg = fmt.Sprintf("Created HPA %s", hpa.Name)
-	} else if op == controllerutil.OperationResultUpdated {
-		logger.Info(fmt.Sprintf("Updated an HPA successfully: %s in %s", cronhpa.Name, cronhpa.Namespace))
-		event = CronHPAEventUpdated
-		msg = fmt.Sprintf("Updated HPA %s", hpa.Name)
-	} else if op != controllerutil.OperationResultNone {
-		logger.Info(fmt.Sprintf("Updated an HPA without changes: %s in %s", cronhpa.Name, cronhpa.Namespace))
-		event = CronHPAEventUpdated
-		msg = fmt.Sprintf("Updated HPA %s without changes", hpa.Name)
+		msg = fmt.Sprintf("Created HPA %s", newhpa.Name)
+	} else {
+		logger.Info(fmt.Sprintf("old %d, new %d", *hpa.Spec.MinReplicas, *newhpa.Spec.MinReplicas))
+		if reflect.DeepEqual(hpa.Spec, newhpa.Spec) {
+			logger.Info(fmt.Sprintf("Updated an HPA without changes: %s in %s", cronhpa.Name, cronhpa.Namespace))
+			event = CronHPAEventUpdated
+			msg = fmt.Sprintf("Updated HPA %s without changes", newhpa.Name)
+		} else {
+			patch := client.MergeFrom(hpa)
+			if err := reconciler.Patch(ctx, newhpa, patch); err != nil {
+				return err
+			}
+			logger.Info(fmt.Sprintf("Updated an HPA successfully: %s in %s", cronhpa.Name, cronhpa.Namespace))
+			event = CronHPAEventUpdated
+			msg = fmt.Sprintf("Updated HPA %s", newhpa.Name)
+		}
 	}
+
 	if event != "" {
 		if patchName != "" {
 			msg = fmt.Sprintf("%s with %s", msg, patchName)
 		}
-		reconciler.Recorder.Event((*cronhpav1alpha1.CronHorizontalPodAutoscaler)(cronhpa), corev1.EventTypeNormal, event, msg)
+		reconciler.Recorder.Event(cronhpa.ToCompatible(), corev1.EventTypeNormal, event, msg)
 	}
 	return nil
 }
