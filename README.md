@@ -1,7 +1,6 @@
 # CronHPA
 
 [![Go Reference][godoc-image]][godoc-link]
-[![Build Status][build-image]][build-link]
 [![Coverage Status][cov-image]][cov-link]
 
 CronHPA is an operator to update HPA resources based on schedules. For example, you can decrease min replicas in the night-time and increase it in the day-time.
@@ -61,8 +60,6 @@ Copyright (c) 2021 Daisuke Taniwaki. See [LICENSE](LICENSE) for details.
 
 [godoc-image]: https://pkg.go.dev/badge/github.com/dtaniwaki/cron-hpa.svg
 [godoc-link]: https://pkg.go.dev/github.com/dtaniwaki/cron-hpa
-[build-image]: https://travis-ci.com/dtaniwaki/cron-hpa.svg?branch=main
-[build-link]:  https://travis-ci.com/dtaniwaki/cron-hpa
 [cov-image]:   https://coveralls.io/repos/github/dtaniwaki/cron-hpa/badge.svg?branch=main
 [cov-link]:    https://coveralls.io/github/dtaniwaki/cron-hpa?branch=main
 
