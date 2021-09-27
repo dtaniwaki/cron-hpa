@@ -33,6 +33,13 @@ type CronContext struct {
 func (cronctx *CronContext) Run() {
 	ctx := context.Background()
 	logger := log.Log
+	if err := cronctx.run(ctx); err != nil {
+		logger.Error(err, "Failed to run a cron job")
+	}
+}
+
+func (cronctx *CronContext) run(ctx context.Context) error {
+	logger := log.FromContext(ctx)
 	cronhpa := cronctx.cronhpa
 
 	logger.Info(fmt.Sprintf("Execute a cron job of CronHPA %s in %s", cronhpa.Name, cronhpa.Namespace))
@@ -42,12 +49,14 @@ func (cronctx *CronContext) Run() {
 		if errors.IsNotFound(err) {
 			// Remove the lost cron.
 			cronctx.reconciler.Cron.RemoveResourceEntries(cronhpa.ToNamespacedName())
-			return
+			return nil
 		}
-		panic(err)
+		return err
 	}
 
 	if err := cronhpa.CreateOrPatchHPA(ctx, cronctx.patchName, cronctx.reconciler); err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
