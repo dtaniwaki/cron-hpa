@@ -17,11 +17,9 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Get the version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
-      env:
-        GITHUB_REF: ${{ github.ref }}
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
     - name: Build container image
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: docker.pkg.github.com/dtaniwaki/cron-hpa/cron-hpa-controller:${{ steps.get_version.outputs.VERSION }}
+        tags: docker.pkg.github.com/dtaniwaki/cron-hpa/cron-hpa-controller:$VERSION
