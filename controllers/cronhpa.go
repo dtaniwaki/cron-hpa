@@ -210,18 +210,16 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		msg = fmt.Sprintf("Created HPA %s", newhpa.Name)
 	} else {
 		if reflect.DeepEqual(hpa.Spec, newhpa.Spec) {
-			logger.Info(fmt.Sprintf("Updated an HPA without changes: %s in %s", cronhpa.Name, cronhpa.Namespace))
-			event = CronHPAEventUpdated
-			msg = fmt.Sprintf("Updated HPA %s without changes", newhpa.Name)
+			logger.Info(fmt.Sprintf("Skip updating an HPA with no changes: %s in %s", cronhpa.Name, cronhpa.Namespace))
 		} else {
 			patch := client.MergeFrom(hpa)
 			if err := reconciler.Patch(ctx, newhpa, patch); err != nil {
 				return err
 			}
 			logger.Info(fmt.Sprintf("Updated an HPA successfully: %s in %s", cronhpa.Name, cronhpa.Namespace))
-			event = CronHPAEventUpdated
-			msg = fmt.Sprintf("Updated HPA %s", newhpa.Name)
 		}
+		event = CronHPAEventUpdated
+		msg = fmt.Sprintf("Updated HPA %s", newhpa.Name)
 	}
 
 	if event != "" {
