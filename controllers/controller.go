@@ -99,6 +99,8 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 			return ctrl.Result{}, err
 		}
 	}
+
+	logger.Info(fmt.Sprintf("Create or update HPA %s in %s", cronhpa.Name, cronhpa.Namespace))
 	patchName, err := cronhpa.GetCurrentPatchName(ctx, now)
 	if err != nil {
 		return ctrl.Result{}, err
