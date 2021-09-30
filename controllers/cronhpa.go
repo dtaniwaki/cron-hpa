@@ -141,7 +141,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscali
 func (cronhpa *CronHorizontalPodAutoscaler) GetCurrentPatchName(ctx context.Context, currentTime time.Time) (string, error) {
 	logger := log.FromContext(ctx)
 	logger.Info(fmt.Sprintf("Get current patch of %s in %s", cronhpa.Name, cronhpa.Namespace))
-	currentPatchName := ""
+	currentPatchName := cronhpa.Status.LastScheduledPatchName
 	lastCronTimestamp := cronhpa.Status.LastCronTimestamp
 	if lastCronTimestamp != nil {
 		var standardParser = cron.NewParser(
@@ -224,18 +224,19 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		}
 	}
 
+	cronhpa.Status.LastCronTimestamp = &metav1.Time{
+		Time: currentTime,
+	}
+	cronhpa.Status.LastScheduledPatchName = patchName
+	if err := reconciler.Status().Update(ctx, cronhpa.ToCompatible()); err != nil {
+		return err
+	}
+
 	if event != "" {
 		if patchName != "" {
 			msg = fmt.Sprintf("%s with %s", msg, patchName)
 		}
 		reconciler.Recorder.Event(cronhpa.ToCompatible(), corev1.EventTypeNormal, event, msg)
-	}
-
-	cronhpa.Status.LastCronTimestamp = &metav1.Time{
-		Time: currentTime,
-	}
-	if err := reconciler.Status().Update(ctx, cronhpa.ToCompatible()); err != nil {
-		return err
 	}
 
 	return nil

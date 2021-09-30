@@ -224,6 +224,18 @@ spec:
 		t.FailNow()
 	}
 
+	// Out-range date with last patch name.
+	_ = currentTime.UnmarshalText([]byte("2021-09-15T00:00:00+09:00")) // Wed
+	cronhpa.Status.LastScheduledPatchName = "weekday"
+	patchName, err = cronhpa.GetCurrentPatchName(ctx, currentTime)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "weekday", patchName) {
+		t.FailNow()
+	}
+	cronhpa.Status.LastScheduledPatchName = ""
+
 	// Without last timestamp
 	cronhpa.Status.LastCronTimestamp = nil
 	_ = currentTime.UnmarshalText([]byte("2021-10-02T00:00:00+09:00")) // Sat

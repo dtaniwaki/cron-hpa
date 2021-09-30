@@ -1302,7 +1302,12 @@ spec:
               of CronHorizontalPodAutoscaler.
             properties:
               lastCronTimestamp:
+                description: LastCronTimestamp is the time of last cron job.
                 format: date-time
+                type: string
+              lastScheduledPatchName:
+                description: LastScheduledPatchName is the last patch name applied
+                  to the HPA.
                 type: string
             type: object
         type: object

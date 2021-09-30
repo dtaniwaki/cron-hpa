@@ -93,7 +93,10 @@ type CronHorizontalPodAutoscalerSpec struct {
 
 // CronHorizontalPodAutoscalerStatus defines the observed state of CronHorizontalPodAutoscaler.
 type CronHorizontalPodAutoscalerStatus struct {
+	// LastCronTimestamp is the time of last cron job.
 	LastCronTimestamp *metav1.Time `json:"lastCronTimestamp,omitempty"`
+	// LastScheduledPatchName is the last patch name applied to the HPA.
+	LastScheduledPatchName string `json:"lastScheduledPatchName,omitempty"`
 }
 
 //+kubebuilder:object:root=true
