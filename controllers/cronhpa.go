@@ -224,15 +224,14 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		}
 	}
 
-	cronhpa.Status.LastCronTimestamp = &metav1.Time{
-		Time: currentTime,
-	}
-	cronhpa.Status.LastScheduledPatchName = patchName
-	if err := reconciler.Status().Update(ctx, cronhpa.ToCompatible()); err != nil {
-		return err
-	}
-
 	if event != "" {
+		cronhpa.Status.LastCronTimestamp = &metav1.Time{
+			Time: currentTime,
+		}
+		cronhpa.Status.LastScheduledPatchName = patchName
+		if err := reconciler.Status().Update(ctx, cronhpa.ToCompatible()); err != nil {
+			return err
+		}
 		if patchName != "" {
 			msg = fmt.Sprintf("%s with %s", msg, patchName)
 		}
