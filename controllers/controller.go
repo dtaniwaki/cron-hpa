@@ -99,7 +99,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 			return ctrl.Result{}, err
 		}
 		// Apply missing patches.
-		logger.Info(fmt.Sprintf("Apply missing patches of %s in %s", cronhpa.Name, cronhpa.Namespace))
+		logger.Info(fmt.Sprintf("Apply missing patch of %s in %s", cronhpa.Name, cronhpa.Namespace))
 		patchName, err := cronhpa.GetCurrentPatchName(ctx, now)
 		if err != nil {
 			return ctrl.Result{}, err
