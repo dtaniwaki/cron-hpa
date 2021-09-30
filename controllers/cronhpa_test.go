@@ -17,11 +17,14 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -141,6 +144,94 @@ spec:
 		t.FailNow()
 	}
 	if !assert.Equal(t, withPatchHPA, hpa) {
+		t.FailNow()
+	}
+}
+
+func TestGetCurrentPatchName(t *testing.T) {
+	ctx := context.TODO()
+
+	cronHPAManifest := `
+apiVersion: cron-hpa.dtaniwaki.github.com/v1alpha1
+kind: CronHorizontalPodAutoscaler
+metadata:
+  name: cron-hpa-sample
+  namespace: default
+spec:
+  template:
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: cron-hpa-nginx
+      minReplicas: 1
+      maxReplicas: 10
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 50
+  scheduledPatches:
+  - name: weekday
+    schedule: "0 0 * 10 mon-fri"
+    timezone: "Asia/Tokyo"
+  - name: weekend
+    schedule: "0 0 * 10 sat,sun"
+    timezone: "Asia/Tokyo"
+`
+
+	cronhpa := &CronHorizontalPodAutoscaler{}
+	err := yaml.Unmarshal([]byte(cronHPAManifest), cronhpa.ToCompatible())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	currentTime := time.Time{}
+	_ = currentTime.UnmarshalText([]byte("2021-09-04T00:00:00+09:00"))
+	cronhpa.Status.LastCronTimestamp = &metav1.Time{
+		Time: currentTime,
+	}
+
+	// In-range weekday.
+	_ = currentTime.UnmarshalText([]byte("2021-10-04T00:00:00+09:00")) // Mon
+	patchName, err := cronhpa.GetCurrentPatchName(ctx, currentTime)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "weekday", patchName) {
+		t.FailNow()
+	}
+
+	// In-range weekend.
+	_ = currentTime.UnmarshalText([]byte("2021-10-02T00:00:00+09:00")) // Sat
+	patchName, err = cronhpa.GetCurrentPatchName(ctx, currentTime)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "weekend", patchName) {
+		t.FailNow()
+	}
+
+	// Out-range date
+	_ = currentTime.UnmarshalText([]byte("2021-09-15T00:00:00+09:00")) // Wed
+	patchName, err = cronhpa.GetCurrentPatchName(ctx, currentTime)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "", patchName) {
+		t.FailNow()
+	}
+
+	// Without last timestamp
+	cronhpa.Status.LastCronTimestamp = nil
+	_ = currentTime.UnmarshalText([]byte("2021-10-02T00:00:00+09:00")) // Sat
+	patchName, err = cronhpa.GetCurrentPatchName(ctx, currentTime)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "", patchName) {
 		t.FailNow()
 	}
 }

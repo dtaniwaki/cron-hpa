@@ -28,4 +28,4 @@ spec:
     schedule: "5,15,25,35,45,55 * * * *"
     timezone: "Asia/Tokyo"
     patch:
-      minReplicas: 1
+      minReplicas: 2

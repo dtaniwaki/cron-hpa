@@ -93,6 +93,7 @@ type CronHorizontalPodAutoscalerSpec struct {
 
 // CronHorizontalPodAutoscalerStatus defines the observed state of CronHorizontalPodAutoscaler.
 type CronHorizontalPodAutoscalerStatus struct {
+	LastCronTimestamp *metav1.Time `json:"lastCronTimestamp,omitempty"`
 }
 
 //+kubebuilder:object:root=true

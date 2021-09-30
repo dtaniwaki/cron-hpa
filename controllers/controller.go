@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -51,6 +52,8 @@ const finalizerName = "cron-hpa.dtaniwaki.github.com/finalizer"
 
 func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
+
+	now := time.Now()
 
 	// Fetch the CronHorizontalPodAutoscaler instance.
 	logger.Info(fmt.Sprintf("Fetch CronHPA %s in %s", req.Name, req.Namespace))
@@ -95,8 +98,14 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 		if !errors.IsNotFound(err) {
 			return ctrl.Result{}, err
 		}
-		// Create the default HPA.
-		if err := cronhpa.CreateOrPatchHPA(ctx, "", r); err != nil {
+		// Apply missing patches.
+		logger.Info(fmt.Sprintf("Apply missing patches of %s in %s", cronhpa.Name, cronhpa.Namespace))
+		patchName, err := cronhpa.GetCurrentPatchName(ctx, now)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		if err := cronhpa.CreateOrPatchHPA(ctx, patchName, now, r); err != nil {
 			return ctrl.Result{}, err
 		}
 	}

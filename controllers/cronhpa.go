@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/dtaniwaki/cron-hpa/api/v1alpha1"
 	cronhpav1alpha1 "github.com/dtaniwaki/cron-hpa/api/v1alpha1"
+	"github.com/robfig/cron/v3"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -46,8 +48,11 @@ const (
 	CronHPAEventNone        CronHPAEvent = ""
 )
 
+const MAX_SCHEDULE_TRY = 1000000
+
 func (cronhpa *CronHorizontalPodAutoscaler) UpdateSchedules(ctx context.Context, reconciler *CronHorizontalPodAutoscalerReconciler) error {
 	logger := log.FromContext(ctx)
+	logger.Info(fmt.Sprintf("Update schedules of %s in %s", cronhpa.Name, cronhpa.Namespace))
 	reconciler.Cron.RemoveResourceEntries(cronhpa.ToNamespacedName())
 	entryNames := make([]string, 0)
 	for _, scheduledPatch := range cronhpa.Spec.ScheduledPatches {
@@ -133,8 +138,54 @@ func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscali
 	return hpa, nil
 }
 
-func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context, patchName string, reconciler *CronHorizontalPodAutoscalerReconciler) error {
+func (cronhpa *CronHorizontalPodAutoscaler) GetCurrentPatchName(ctx context.Context, currentTime time.Time) (string, error) {
 	logger := log.FromContext(ctx)
+	logger.Info(fmt.Sprintf("Get current patch of %s in %s", cronhpa.Name, cronhpa.Namespace))
+	currentPatchName := ""
+	lastCronTimestamp := cronhpa.Status.LastCronTimestamp
+	if lastCronTimestamp != nil {
+		var standardParser = cron.NewParser(
+			cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor,
+		)
+
+		mostLatestTime := lastCronTimestamp.Time
+		for _, scheduledPatch := range cronhpa.Spec.ScheduledPatches {
+			tzs := scheduledPatch.Schedule
+			if scheduledPatch.Timezone != "" {
+				tzs = "CRON_TZ=" + scheduledPatch.Timezone + " " + scheduledPatch.Schedule
+			}
+			schedule, err := standardParser.Parse(tzs)
+			if err != nil {
+				return "", err
+			}
+			nextTime := lastCronTimestamp.Time
+			latestTime := lastCronTimestamp.Time
+			for i := 0; i <= MAX_SCHEDULE_TRY; i++ {
+				nextTime = schedule.Next(nextTime)
+				if nextTime.After(currentTime) || nextTime.IsZero() {
+					break
+				}
+				latestTime = nextTime
+				if i == MAX_SCHEDULE_TRY {
+					return "", fmt.Errorf("Cannot find the next schedule of %s", scheduledPatch.Name)
+				}
+			}
+			if latestTime.After(mostLatestTime) && (latestTime.Before(currentTime) || latestTime.Equal(currentTime)) {
+				currentPatchName = scheduledPatch.Name
+				mostLatestTime = latestTime
+			}
+		}
+
+	}
+	if currentPatchName != "" {
+		logger.Info(fmt.Sprintf("Found current patch %s of %s in %s", currentPatchName, cronhpa.Name, cronhpa.Namespace))
+	}
+	return currentPatchName, nil
+}
+
+func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context, patchName string, currentTime time.Time, reconciler *CronHorizontalPodAutoscalerReconciler) error {
+	logger := log.FromContext(ctx)
+	logger.Info(fmt.Sprintf("Create or update HPA of %s in %s", cronhpa.Name, cronhpa.Namespace))
 
 	newhpa, err := cronhpa.NewHPA(patchName)
 	if err != nil {
@@ -179,6 +230,14 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		}
 		reconciler.Recorder.Event(cronhpa.ToCompatible(), corev1.EventTypeNormal, event, msg)
 	}
+
+	cronhpa.Status.LastCronTimestamp = &metav1.Time{
+		Time: currentTime,
+	}
+	if err := reconciler.Status().Update(ctx, cronhpa.ToCompatible()); err != nil {
+		return err
+	}
+
 	return nil
 }
 

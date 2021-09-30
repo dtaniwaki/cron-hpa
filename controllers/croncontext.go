@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -41,6 +42,7 @@ func (cronctx *CronContext) Run() {
 func (cronctx *CronContext) run(ctx context.Context) error {
 	logger := log.FromContext(ctx)
 	cronhpa := cronctx.cronhpa
+	now := time.Now()
 
 	logger.Info(fmt.Sprintf("Execute a cron job of CronHPA %s in %s", cronhpa.Name, cronhpa.Namespace))
 
@@ -54,7 +56,7 @@ func (cronctx *CronContext) run(ctx context.Context) error {
 		return err
 	}
 
-	if err := cronhpa.CreateOrPatchHPA(ctx, cronctx.patchName, cronctx.reconciler); err != nil {
+	if err := cronhpa.CreateOrPatchHPA(ctx, cronctx.patchName, now, cronctx.reconciler); err != nil {
 		return err
 	}
 
