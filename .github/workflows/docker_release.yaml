@@ -18,6 +18,8 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Get the version
       run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      env:
+        GITHUB_REF: ${{ github.ref }}
     - name: Build container image
       uses: docker/build-push-action@v2
       with:
