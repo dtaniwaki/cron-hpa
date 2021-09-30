@@ -98,13 +98,13 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 		if !errors.IsNotFound(err) {
 			return ctrl.Result{}, err
 		}
-		patchName, err := cronhpa.GetCurrentPatchName(ctx, now)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		if err := cronhpa.CreateOrPatchHPA(ctx, patchName, now, r); err != nil {
-			return ctrl.Result{}, err
-		}
+	}
+	patchName, err := cronhpa.GetCurrentPatchName(ctx, now)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if err := cronhpa.CreateOrPatchHPA(ctx, patchName, now, r); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	// Update the schedules.
