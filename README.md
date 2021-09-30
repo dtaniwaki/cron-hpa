@@ -19,7 +19,7 @@ spec:
         apiVersion: apps/v1
         kind: Deployment
         name: cron-hpa-nginx
-      minReplicas: 1
+      minReplicas: 3
       maxReplicas: 10
       metrics:
       - type: Resource
