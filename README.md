@@ -47,7 +47,7 @@ spec:
 
 ## Prerequisites
 
-- [golangci-lint v1.42.1](https://github.com/golangci/golangci-lint-action)
+- [golangci-lint v1.42.1](https://github.com/golangci/golangci-lint)
 
 ## Build
 
