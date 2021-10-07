@@ -120,7 +120,3 @@ type CronHorizontalPodAutoscalerList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []CronHorizontalPodAutoscaler `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&CronHorizontalPodAutoscaler{}, &CronHorizontalPodAutoscalerList{})
-}
