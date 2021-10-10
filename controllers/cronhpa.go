@@ -53,7 +53,7 @@ const MAX_SCHEDULE_TRY = 1000000
 func (cronhpa *CronHorizontalPodAutoscaler) UpdateSchedules(ctx context.Context, reconciler *CronHorizontalPodAutoscalerReconciler) error {
 	logger := log.FromContext(ctx)
 	logger.Info(fmt.Sprintf("Update schedules of %s in %s", cronhpa.Name, cronhpa.Namespace))
-	reconciler.Cron.RemoveResourceEntries(cronhpa.ToNamespacedName())
+	reconciler.Cron.RemoveResourceEntry(cronhpa.ToNamespacedName())
 	entryNames := make([]string, 0)
 	for _, scheduledPatch := range cronhpa.Spec.ScheduledPatches {
 		entryNames = append(entryNames, scheduledPatch.Name)
@@ -77,7 +77,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) UpdateSchedules(ctx context.Context,
 }
 
 func (cronhpa *CronHorizontalPodAutoscaler) ClearSchedules(ctx context.Context, reconciler *CronHorizontalPodAutoscalerReconciler) error {
-	reconciler.Cron.RemoveResourceEntries(cronhpa.ToNamespacedName())
+	reconciler.Cron.RemoveResourceEntry(cronhpa.ToNamespacedName())
 	msg := "Unscheduled"
 	reconciler.Recorder.Event((*cronhpav1alpha1.CronHorizontalPodAutoscaler)(cronhpa), corev1.EventTypeNormal, CronHPAEventUnscheduled, msg)
 	return nil

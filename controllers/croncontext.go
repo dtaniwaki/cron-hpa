@@ -50,7 +50,7 @@ func (cronctx *CronContext) run(ctx context.Context) error {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Remove the lost cron.
-			cronctx.reconciler.Cron.RemoveResourceEntries(cronhpa.ToNamespacedName())
+			cronctx.reconciler.Cron.RemoveResourceEntry(cronhpa.ToNamespacedName())
 			return nil
 		}
 		return err

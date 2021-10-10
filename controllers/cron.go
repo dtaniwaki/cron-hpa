@@ -87,7 +87,7 @@ func (c *Cron) Remove(namespacedName types.NamespacedName, patchName string) {
 	}
 }
 
-func (c *Cron) RemoveResourceEntries(namespacedName types.NamespacedName) {
+func (c *Cron) RemoveResourceEntry(namespacedName types.NamespacedName) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -99,6 +99,18 @@ func (c *Cron) RemoveResourceEntries(namespacedName types.NamespacedName) {
 		}
 		delete(c.resourceEntries, resourceName)
 	}
+}
+
+func (c *Cron) ListResourceEntry(namespacedName types.NamespacedName) ResourceEntry {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	resourceName := getResourceEntryName(namespacedName)
+	resourceEntry, ok := c.resourceEntries[resourceName]
+	if ok && resourceEntry != nil {
+		return resourceEntry
+	}
+	return ResourceEntry{}
 }
 
 func getResourceEntryName(namespacedName types.NamespacedName) string {
