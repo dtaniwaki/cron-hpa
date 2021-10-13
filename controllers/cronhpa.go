@@ -52,7 +52,8 @@ const MAX_SCHEDULE_TRY = 1000000
 
 func (cronhpa *CronHorizontalPodAutoscaler) UpdateSchedules(ctx context.Context, reconciler *CronHorizontalPodAutoscalerReconciler) error {
 	logger := log.FromContext(ctx)
-	logger.Info(fmt.Sprintf("Update schedules of %s in %s", cronhpa.Name, cronhpa.Namespace))
+
+	logger.Info("Update schedules")
 	reconciler.Cron.RemoveResourceEntry(cronhpa.ToNamespacedName())
 	entryNames := make([]string, 0)
 	for _, scheduledPatch := range cronhpa.Spec.ScheduledPatches {
@@ -69,7 +70,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) UpdateSchedules(ctx context.Context,
 		if err != nil {
 			return err
 		}
-		logger.Info(fmt.Sprintf("Scheduled %s of CronHPA %s in %s", scheduledPatch.Name, cronhpa.Name, cronhpa.Namespace))
+		logger.Info(fmt.Sprintf("Scheduled %s", scheduledPatch.Name))
 	}
 	msg := fmt.Sprintf("Scheduled: %s", strings.Join(entryNames, ","))
 	reconciler.Recorder.Event((*cronhpav1alpha1.CronHorizontalPodAutoscaler)(cronhpa), corev1.EventTypeNormal, CronHPAEventScheduled, msg)
@@ -140,7 +141,8 @@ func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscali
 
 func (cronhpa *CronHorizontalPodAutoscaler) GetCurrentPatchName(ctx context.Context, currentTime time.Time) (string, error) {
 	logger := log.FromContext(ctx)
-	logger.Info(fmt.Sprintf("Get current patch of %s in %s", cronhpa.Name, cronhpa.Namespace))
+
+	logger.Info("Get current patch")
 	currentPatchName := cronhpa.Status.LastScheduledPatchName
 	lastCronTimestamp := cronhpa.Status.LastCronTimestamp
 	if lastCronTimestamp != nil {
@@ -167,7 +169,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) GetCurrentPatchName(ctx context.Cont
 				}
 				latestTime = nextTime
 				if i == MAX_SCHEDULE_TRY {
-					return "", fmt.Errorf("Cannot find the next schedule of %s", scheduledPatch.Name)
+					return "", fmt.Errorf("Cannot find the next schedule of patch %s", scheduledPatch.Name)
 				}
 			}
 			if latestTime.After(mostLatestTime) && (latestTime.Before(currentTime) || latestTime.Equal(currentTime)) {
@@ -178,14 +180,15 @@ func (cronhpa *CronHorizontalPodAutoscaler) GetCurrentPatchName(ctx context.Cont
 
 	}
 	if currentPatchName != "" {
-		logger.Info(fmt.Sprintf("Found current patch %s of %s in %s", currentPatchName, cronhpa.Name, cronhpa.Namespace))
+		logger.Info(fmt.Sprintf("Found current patch %s", currentPatchName))
 	}
 	return currentPatchName, nil
 }
 
 func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context, patchName string, currentTime time.Time, reconciler *CronHorizontalPodAutoscalerReconciler) error {
 	logger := log.FromContext(ctx)
-	logger.Info(fmt.Sprintf("Create or update HPA of %s in %s", cronhpa.Name, cronhpa.Namespace))
+
+	logger.Info("Create or update HPA")
 
 	newhpa, err := cronhpa.NewHPA(patchName)
 	if err != nil {
@@ -205,21 +208,21 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		if err := reconciler.Create(ctx, newhpa); err != nil {
 			return err
 		}
-		logger.Info(fmt.Sprintf("Created an HPA successfully: %s in %s", cronhpa.Name, cronhpa.Namespace))
+		logger.Info("Created an HPA successfully")
 		event = CronHPAEventCreated
-		msg = fmt.Sprintf("Created HPA %s", newhpa.Name)
+		msg = "Created HPA"
 	} else {
 		if reflect.DeepEqual(hpa.Spec, newhpa.Spec) {
-			logger.Info(fmt.Sprintf("Skip updating an HPA with no changes: %s in %s", cronhpa.Name, cronhpa.Namespace))
+			logger.Info("Skip updating an HPA with no changes")
 		} else {
 			patch := client.MergeFrom(hpa)
 			if err := reconciler.Patch(ctx, newhpa, patch); err != nil {
 				return err
 			}
-			logger.Info(fmt.Sprintf("Updated an HPA successfully: %s in %s", cronhpa.Name, cronhpa.Namespace))
+			logger.Info("Updated an HPA successfully")
 		}
 		event = CronHPAEventUpdated
-		msg = fmt.Sprintf("Updated HPA %s", newhpa.Name)
+		msg = "Updated HPA"
 	}
 
 	if event != "" {

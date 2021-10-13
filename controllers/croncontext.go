@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +32,10 @@ type CronContext struct {
 
 func (cronctx *CronContext) Run() {
 	ctx := context.Background()
-	logger := log.Log
+	ctx = context.WithValue(ctx, CTX_VALUE_NAME, cronctx.cronhpa.Name)
+	ctx = context.WithValue(ctx, CTX_VALUE_NAMESPACE, cronctx.cronhpa.Namespace)
+	logger := log.FromContext(ctx)
+
 	if err := cronctx.run(ctx); err != nil {
 		logger.Error(err, "Failed to run a cron job")
 	}
@@ -44,7 +46,7 @@ func (cronctx *CronContext) run(ctx context.Context) error {
 	cronhpa := cronctx.cronhpa
 	now := time.Now()
 
-	logger.Info(fmt.Sprintf("Execute a cron job of CronHPA %s in %s", cronhpa.Name, cronhpa.Namespace))
+	logger.Info("Execute a cron job of CronHPA")
 
 	err := cronctx.reconciler.Get(ctx, cronhpa.ToNamespacedName(), cronhpa.ToCompatible())
 	if err != nil {

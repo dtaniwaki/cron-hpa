@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
@@ -56,7 +55,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 	now := time.Now()
 
 	// Fetch the CronHorizontalPodAutoscaler instance.
-	logger.Info(fmt.Sprintf("Fetch CronHPA %s in %s", req.Name, req.Namespace))
+	logger.Info("Fetch CronHPA")
 	cronhpa := &CronHorizontalPodAutoscaler{}
 	err := r.Get(ctx, req.NamespacedName, (*cronhpav1alpha1.CronHorizontalPodAutoscaler)(cronhpa))
 	if err != nil {
@@ -69,7 +68,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 	// Handle deleted resources.
 	if !cronhpa.ObjectMeta.DeletionTimestamp.IsZero() {
 		if controllerutil.ContainsFinalizer(cronhpa.ToCompatible(), finalizerName) {
-			logger.Info(fmt.Sprintf("Clear schedules of %s in %s", cronhpa.Name, cronhpa.Namespace))
+			logger.Info("Clear schedules")
 			if err := cronhpa.ClearSchedules(ctx, r); err != nil {
 				logger.Error(err, "Failed to clear schedules")
 			}
@@ -84,7 +83,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 
 	// Set finalizer.
 	if !controllerutil.ContainsFinalizer(cronhpa.ToCompatible(), finalizerName) {
-		logger.Info(fmt.Sprintf("Set finalizer on %s in %s", cronhpa.Name, cronhpa.Namespace))
+		logger.Info("Set finalizer")
 		cronhpa.ObjectMeta.Finalizers = append(cronhpa.ObjectMeta.Finalizers, finalizerName)
 		if err := r.Update(ctx, cronhpa.ToCompatible()); err != nil {
 			return reconcile.Result{}, err
@@ -92,7 +91,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 	}
 
 	// Fetch the corresponded HPA instance.
-	logger.Info(fmt.Sprintf("Fetch HPA %s in %s", cronhpa.Name, cronhpa.Namespace))
+	logger.Info("Fetch HPA")
 	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{}
 	if err := r.Get(ctx, req.NamespacedName, hpa); err != nil {
 		if !errors.IsNotFound(err) {
@@ -100,7 +99,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 		}
 	}
 
-	logger.Info(fmt.Sprintf("Create or update HPA %s in %s", cronhpa.Name, cronhpa.Namespace))
+	logger.Info("Create or update HPA")
 	patchName, err := cronhpa.GetCurrentPatchName(ctx, now)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -110,7 +109,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 	}
 
 	// Update the schedules.
-	logger.Info(fmt.Sprintf("Update schedules of %s in %s", cronhpa.Name, cronhpa.Namespace))
+	logger.Info("Update schedules")
 	if err := cronhpa.UpdateSchedules(ctx, r); err != nil {
 		return ctrl.Result{}, err
 	}
