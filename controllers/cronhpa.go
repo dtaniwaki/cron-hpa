@@ -143,7 +143,16 @@ func (cronhpa *CronHorizontalPodAutoscaler) GetCurrentPatchName(ctx context.Cont
 	logger := log.FromContext(ctx)
 
 	logger.Info("Get current patch")
-	currentPatchName := cronhpa.Status.LastScheduledPatchName
+	currentPatchName := ""
+	for _, scheduledPatch := range cronhpa.Spec.ScheduledPatches {
+		if scheduledPatch.Name == cronhpa.Status.LastScheduledPatchName {
+			currentPatchName = scheduledPatch.Name
+			break
+		}
+	}
+	if cronhpa.Status.LastScheduledPatchName != "" && currentPatchName == "" {
+		logger.Info(fmt.Sprintf("Lost scheduled patch %s", cronhpa.Status.LastScheduledPatchName))
+	}
 	lastCronTimestamp := cronhpa.Status.LastCronTimestamp
 	if lastCronTimestamp != nil {
 		var standardParser = cron.NewParser(
@@ -179,8 +188,8 @@ func (cronhpa *CronHorizontalPodAutoscaler) GetCurrentPatchName(ctx context.Cont
 		}
 
 	}
-	if currentPatchName != "" {
-		logger.Info(fmt.Sprintf("Found current patch %s", currentPatchName))
+	if cronhpa.Status.LastScheduledPatchName != currentPatchName {
+		logger.Info(fmt.Sprintf("Current patch changed from %s to %s", cronhpa.Status.LastScheduledPatchName, currentPatchName))
 	}
 	return currentPatchName, nil
 }

@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	cronhpav1alpha1 "github.com/dtaniwaki/cron-hpa/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -234,9 +235,21 @@ spec:
 	if !assert.Equal(t, "weekday", patchName) {
 		t.FailNow()
 	}
-	cronhpa.Status.LastScheduledPatchName = ""
+
+	// Lost scheduled patch
+	cronhpa.Status.LastScheduledPatchName = "weekday"
+	cronhpa.Spec.ScheduledPatches = []cronhpav1alpha1.CronHorizontalPodAutoscalerScheduledPatch{}
+	_ = currentTime.UnmarshalText([]byte("2021-10-02T00:00:00+09:00")) // Sat
+	patchName, err = cronhpa.GetCurrentPatchName(ctx, currentTime)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "", patchName) {
+		t.FailNow()
+	}
 
 	// Without last timestamp
+	cronhpa.Status.LastScheduledPatchName = "weekday"
 	cronhpa.Status.LastCronTimestamp = nil
 	_ = currentTime.UnmarshalText([]byte("2021-10-02T00:00:00+09:00")) // Sat
 	patchName, err = cronhpa.GetCurrentPatchName(ctx, currentTime)
