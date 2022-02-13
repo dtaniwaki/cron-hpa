@@ -40,11 +40,14 @@ type CronHorizontalPodAutoscaler cronhpav1alpha1.CronHorizontalPodAutoscaler
 
 type CronHPAEvent = string
 
+const annotationNameSkip = "cron-hpa.dtaniwaki.github.com/skip"
+
 const (
 	CronHPAEventCreated     CronHPAEvent = "Created"
 	CronHPAEventUpdated     CronHPAEvent = "Updated"
 	CronHPAEventScheduled   CronHPAEvent = "Scheduled"
 	CronHPAEventUnscheduled CronHPAEvent = "Unscheduled"
+	CronHPAEventSkipped     CronHPAEvent = "Skipped"
 	CronHPAEventNone        CronHPAEvent = ""
 )
 
@@ -203,7 +206,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 	if err != nil {
 		return err
 	}
-	if err := controllerutil.SetControllerReference(cronhpa.ToCompatible(), newhpa, reconciler.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(cronhpa.ToCompatible(), newhpa, reconciler.Client.Scheme()); err != nil {
 		return err
 	}
 
@@ -221,17 +224,23 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 		event = CronHPAEventCreated
 		msg = "Created HPA"
 	} else {
-		if reflect.DeepEqual(hpa.Spec, newhpa.Spec) {
+		if hpa.Annotations[annotationNameSkip] == "true" {
+			logger.Info("Skip updating an HPA by an annotation")
+			event = CronHPAEventSkipped
+			msg = "Skipped updating HPA by an annotation"
+		} else if reflect.DeepEqual(hpa.Spec, newhpa.Spec) {
 			logger.Info("Skip updating an HPA with no changes")
+			event = CronHPAEventSkipped
+			msg = "Skipped updating HPA with no changes"
 		} else {
 			patch := client.MergeFrom(hpa)
 			if err := reconciler.Patch(ctx, newhpa, patch); err != nil {
 				return err
 			}
 			logger.Info("Updated an HPA successfully")
+			event = CronHPAEventUpdated
+			msg = "Updated HPA"
 		}
-		event = CronHPAEventUpdated
-		msg = "Updated HPA"
 	}
 
 	if event != "" {

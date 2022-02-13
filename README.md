@@ -45,6 +45,21 @@ spec:
             averageUtilization: 70 # More conservative scaling.
 ```
 
+## How to use CronHPA
+
+### Disable CronHPA temporarily
+
+Mark the target HPA resource as below to temporarily skip getting CronHPA's update.
+
+```yaml
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    cron-hpa.dtaniwaki.github.com/skip: "true"
+...
+```
+
 ## Prerequisites
 
 - [golangci-lint v1.42.1](https://github.com/golangci/golangci-lint)

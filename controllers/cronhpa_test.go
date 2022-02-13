@@ -23,9 +23,12 @@ import (
 	"time"
 
 	cronhpav1alpha1 "github.com/dtaniwaki/cron-hpa/api/v1alpha1"
+	"github.com/dtaniwaki/cron-hpa/test"
 	"github.com/stretchr/testify/assert"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
@@ -257,6 +260,131 @@ spec:
 		t.FailNow()
 	}
 	if !assert.Equal(t, "", patchName) {
+		t.FailNow()
+	}
+}
+
+func TestCreateOrPatchHPA(t *testing.T) {
+	ctx := context.TODO()
+
+	cronHPAManifest := `
+apiVersion: cron-hpa.dtaniwaki.github.com/v1alpha1
+kind: CronHorizontalPodAutoscaler
+metadata:
+  name: cron-hpa-sample
+  namespace: default
+spec:
+  template:
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: cron-hpa-nginx
+      minReplicas: 1
+      maxReplicas: 10
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 50
+  scheduledPatches:
+  - name: weekday
+    schedule: "0 0 * 10 mon-fri"
+    timezone: "Asia/Tokyo"
+    patch:
+      minReplicas: 1
+  - name: weekend
+    schedule: "0 0 * 10 sat,sun"
+    timezone: "Asia/Tokyo"
+`
+
+	cronhpa := &CronHorizontalPodAutoscaler{}
+	err := yaml.Unmarshal([]byte(cronHPAManifest), cronhpa.ToCompatible())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	currentTime := time.Time{}
+	_ = currentTime.UnmarshalText([]byte("2021-09-04T00:00:00+09:00"))
+
+	fakeClient, err := test.NewFakeClient(ctx)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	reconciler := &CronHorizontalPodAutoscalerReconciler{
+		Client:   fakeClient,
+		Recorder: &test.FakeRecorder{},
+	}
+
+	// Create a CronHPA.
+	err = reconciler.Client.Create(ctx, cronhpa.ToCompatible())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	// Ensure no HPA.
+	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	err = reconciler.Client.Get(ctx, types.NamespacedName{Namespace: "default", Name: "cron-hpa-sample"}, hpa)
+	if !assert.Equal(t, errors.IsNotFound(err), true) {
+		t.FailNow()
+	}
+
+	// Create an HPA.
+	err = cronhpa.CreateOrPatchHPA(ctx, "weekday", currentTime, reconciler)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	err = reconciler.Client.Get(ctx, types.NamespacedName{Namespace: "default", Name: "cron-hpa-sample"}, hpa)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, int32(1), *hpa.Spec.MinReplicas) {
+		t.FailNow()
+	}
+
+	// Update an HPA.
+	newMinReplicas := int32(2)
+	cronhpa.Spec.ScheduledPatches[0].Patch.MinReplicas = &newMinReplicas
+	err = cronhpa.CreateOrPatchHPA(ctx, "weekday", currentTime, reconciler)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	err = reconciler.Client.Get(ctx, types.NamespacedName{Namespace: "default", Name: "cron-hpa-sample"}, hpa)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, int32(2), *hpa.Spec.MinReplicas) {
+		t.FailNow()
+	}
+
+	// Skip updating an HPA.
+	err = reconciler.Client.Get(ctx, types.NamespacedName{Namespace: "default", Name: "cron-hpa-sample"}, hpa)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, int32(2), *hpa.Spec.MinReplicas) {
+		t.FailNow()
+	}
+	hpa.Annotations = map[string]string{
+		"cron-hpa.dtaniwaki.github.com/skip": "true",
+	}
+	err = reconciler.Client.Update(ctx, hpa)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	newMinReplicas = int32(3)
+	cronhpa.Spec.ScheduledPatches[0].Patch.MinReplicas = &newMinReplicas
+	err = cronhpa.CreateOrPatchHPA(ctx, "weekday", currentTime, reconciler)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	err = reconciler.Client.Get(ctx, types.NamespacedName{Namespace: "default", Name: "cron-hpa-sample"}, hpa)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, int32(2), *hpa.Spec.MinReplicas) {
 		t.FailNow()
 	}
 }
