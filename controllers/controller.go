@@ -55,7 +55,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 	// Fetch the CronHorizontalPodAutoscaler instance.
 	logger.Info("Fetch CronHPA")
 	cronhpa := &CronHorizontalPodAutoscaler{}
-	err := r.Get(ctx, req.NamespacedName, (*cronhpav1alpha1.CronHorizontalPodAutoscaler)(cronhpa))
+	err := r.Get(ctx, req.NamespacedName, cronhpa.ToCompatible())
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
