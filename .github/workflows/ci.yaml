@@ -20,7 +20,7 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-1.17-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-
+          ${{ runner.os }}-go-1.17-
   build:
     needs: setup
     runs-on: ubuntu-latest
