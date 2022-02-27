@@ -11,6 +11,9 @@ jobs:
       id: go
     - name: check out
       uses: actions/checkout@v2
+    - name: before cache
+      run: |
+        mkdir -p ~/go/pkg/mod
     - name: Cache
       uses: actions/cache@v2.1.0
       with:
