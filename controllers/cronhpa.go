@@ -26,7 +26,7 @@ import (
 	"github.com/dtaniwaki/cron-hpa/api/v1alpha1"
 	cronhpav1alpha1 "github.com/dtaniwaki/cron-hpa/api/v1alpha1"
 	"github.com/robfig/cron/v3"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,7 +87,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) ClearSchedules(ctx context.Context, 
 	return nil
 }
 
-func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa *autoscalingv2beta2.HorizontalPodAutoscaler) error {
+func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa *autoscalingv2.HorizontalPodAutoscaler) error {
 	var scheduledPatch *cronhpav1alpha1.CronHorizontalPodAutoscalerScheduledPatch
 	for _, sp := range cronhpa.Spec.ScheduledPatches {
 		if sp.Name == patchName {
@@ -108,7 +108,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa 
 			hpa.Spec.MaxReplicas = *scheduledPatch.Patch.MaxReplicas
 		}
 		if scheduledPatch.Patch.Metrics != nil {
-			hpa.Spec.Metrics = make([]autoscalingv2beta2.MetricSpec, len(scheduledPatch.Patch.Metrics))
+			hpa.Spec.Metrics = make([]autoscalingv2.MetricSpec, len(scheduledPatch.Patch.Metrics))
 			for i, metric := range scheduledPatch.Patch.Metrics {
 				hpa.Spec.Metrics[i] = metric
 			}
@@ -117,12 +117,12 @@ func (cronhpa *CronHorizontalPodAutoscaler) ApplyHPAPatch(patchName string, hpa 
 	return nil
 }
 
-func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscalingv2beta2.HorizontalPodAutoscaler, error) {
+func (cronhpa *CronHorizontalPodAutoscaler) NewHPA(patchName string) (*autoscalingv2.HorizontalPodAutoscaler, error) {
 	template := cronhpa.Spec.Template.DeepCopy()
-	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{
+	hpa := &autoscalingv2.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "HorizontalPodAutoscaler",
-			APIVersion: autoscalingv2beta2.SchemeGroupVersion.Identifier(),
+			APIVersion: autoscalingv2.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cronhpa.Name,
@@ -212,7 +212,7 @@ func (cronhpa *CronHorizontalPodAutoscaler) CreateOrPatchHPA(ctx context.Context
 
 	event := ""
 	msg := ""
-	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	hpa := &autoscalingv2.HorizontalPodAutoscaler{}
 	if err := reconciler.Get(ctx, cronhpa.ToNamespacedName(), hpa); err != nil {
 		if !errors.IsNotFound(err) {
 			return err

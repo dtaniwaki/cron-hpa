@@ -25,7 +25,7 @@ import (
 	cronhpav1alpha1 "github.com/dtaniwaki/cron-hpa/api/v1alpha1"
 	"github.com/dtaniwaki/cron-hpa/test"
 	"github.com/stretchr/testify/assert"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -78,7 +78,7 @@ spec:
 	}
 
 	defaultHPAManifest := `
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: cron-hpa-sample
@@ -99,7 +99,7 @@ spec:
         averageUtilization: 50
 `
 
-	defaultHPA := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	defaultHPA := &autoscalingv2.HorizontalPodAutoscaler{}
 	err = yaml.Unmarshal([]byte(defaultHPAManifest), defaultHPA)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -116,7 +116,7 @@ spec:
 	}
 
 	withPatchHPAManifest := `
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: cron-hpa-sample
@@ -137,7 +137,7 @@ spec:
         averageUtilization: 30
 `
 
-	withPatchHPA := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	withPatchHPA := &autoscalingv2.HorizontalPodAutoscaler{}
 	err = yaml.Unmarshal([]byte(withPatchHPAManifest), withPatchHPA)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -325,7 +325,7 @@ spec:
 	}
 
 	// Ensure no HPA.
-	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	hpa := &autoscalingv2.HorizontalPodAutoscaler{}
 	err = reconciler.Client.Get(ctx, types.NamespacedName{Namespace: "default", Name: "cron-hpa-sample"}, hpa)
 	if !assert.Equal(t, errors.IsNotFound(err), true) {
 		t.FailNow()

@@ -1,11 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.12.0
   name: cronhorizontalpodautoscalers.cron-hpa.dtaniwaki.github.com
 spec:
   group: cron-hpa.dtaniwaki.github.com
@@ -78,7 +76,7 @@ spec:
                               field should be set at once).
                             properties:
                               containerResource:
-                                description: container resource refers to a resource
+                                description: containerResource refers to a resource
                                   metric (such as those specified in requests and
                                   limits) known to Kubernetes describing a single
                                   container in each pod of the current scale target
@@ -212,6 +210,7 @@ spec:
                                               only "value". The requirements are ANDed.
                                             type: object
                                         type: object
+                                        x-kubernetes-map-type: atomic
                                     required:
                                     - name
                                     type: object
@@ -262,16 +261,15 @@ spec:
                                   on an Ingress object).
                                 properties:
                                   describedObject:
-                                    description: CrossVersionObjectReference contains
-                                      enough information to let you identify the referred
-                                      resource.
+                                    description: describedObject specifies the descriptions
+                                      of a object,such as kind,name apiVersion
                                     properties:
                                       apiVersion:
                                         description: API version of the referent
                                         type: string
                                       kind:
                                         description: 'Kind of the referent; More info:
-                                          https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"'
+                                          https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
                                         type: string
                                       name:
                                         description: 'Name of the referent; More info:
@@ -346,6 +344,7 @@ spec:
                                               only "value". The requirements are ANDed.
                                             type: object
                                         type: object
+                                        x-kubernetes-map-type: atomic
                                     required:
                                     - name
                                     type: object
@@ -462,6 +461,7 @@ spec:
                                               only "value". The requirements are ANDed.
                                             type: object
                                         type: object
+                                        x-kubernetes-map-type: atomic
                                     required:
                                     - name
                                     type: object
@@ -669,10 +669,11 @@ spec:
                                   - value
                                   type: object
                                 type: array
+                                x-kubernetes-list-type: atomic
                               selectPolicy:
                                 description: selectPolicy is used to specify which
                                   policy should be used. If not set, the default value
-                                  MaxPolicySelect is used.
+                                  Max is used.
                                 type: string
                               stabilizationWindowSeconds:
                                 description: 'StabilizationWindowSeconds is the number
@@ -689,10 +690,9 @@ spec:
                             type: object
                           scaleUp:
                             description: 'scaleUp is scaling policy for scaling Up.
-                              If not set, the default value is the higher of:   *
-                              increase no more than 4 pods per 60 seconds   * double
-                              the number of pods per 60 seconds No stabilization is
-                              used.'
+                              If not set, the default value is the higher of: * increase
+                              no more than 4 pods per 60 seconds * double the number
+                              of pods per 60 seconds No stabilization is used.'
                             properties:
                               policies:
                                 description: policies is a list of potential scaling
@@ -726,10 +726,11 @@ spec:
                                   - value
                                   type: object
                                 type: array
+                                x-kubernetes-list-type: atomic
                               selectPolicy:
                                 description: selectPolicy is used to specify which
                                   policy should be used. If not set, the default value
-                                  MaxPolicySelect is used.
+                                  Max is used.
                                 type: string
                               stabilizationWindowSeconds:
                                 description: 'StabilizationWindowSeconds is the number
@@ -768,7 +769,7 @@ spec:
                             should be set at once).
                           properties:
                             containerResource:
-                              description: container resource refers to a resource
+                              description: containerResource refers to a resource
                                 metric (such as those specified in requests and limits)
                                 known to Kubernetes describing a single container
                                 in each pod of the current scale target (e.g. CPU
@@ -900,6 +901,7 @@ spec:
                                             only "value". The requirements are ANDed.
                                           type: object
                                       type: object
+                                      x-kubernetes-map-type: atomic
                                   required:
                                   - name
                                   type: object
@@ -950,16 +952,15 @@ spec:
                                 on an Ingress object).
                               properties:
                                 describedObject:
-                                  description: CrossVersionObjectReference contains
-                                    enough information to let you identify the referred
-                                    resource.
+                                  description: describedObject specifies the descriptions
+                                    of a object,such as kind,name apiVersion
                                   properties:
                                     apiVersion:
                                       description: API version of the referent
                                       type: string
                                     kind:
                                       description: 'Kind of the referent; More info:
-                                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"'
+                                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
                                       type: string
                                     name:
                                       description: 'Name of the referent; More info:
@@ -1033,6 +1034,7 @@ spec:
                                             only "value". The requirements are ANDed.
                                           type: object
                                       type: object
+                                      x-kubernetes-map-type: atomic
                                   required:
                                   - name
                                   type: object
@@ -1148,6 +1150,7 @@ spec:
                                             only "value". The requirements are ANDed.
                                           type: object
                                       type: object
+                                      x-kubernetes-map-type: atomic
                                   required:
                                   - name
                                   type: object
@@ -1258,6 +1261,7 @@ spec:
                           - type
                           type: object
                         type: array
+                        x-kubernetes-list-type: atomic
                       minReplicas:
                         description: minReplicas is the lower limit for the number
                           of replicas to which the autoscaler can scale down.  It
@@ -1277,7 +1281,7 @@ spec:
                             description: API version of the referent
                             type: string
                           kind:
-                            description: 'Kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"'
+                            description: 'Kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
                             type: string
                           name:
                             description: 'Name of the referent; More info: http://kubernetes.io/docs/user-guide/identifiers#names'
@@ -1315,9 +1319,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
