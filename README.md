@@ -52,7 +52,7 @@ spec:
 Mark the target HPA resource as below to temporarily skip getting CronHPA's update.
 
 ```yaml
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   annotations:
