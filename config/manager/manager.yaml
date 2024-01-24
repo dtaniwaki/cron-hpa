@@ -22,7 +22,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: docker.pkg.github.com/dtaniwaki/cron-hpa/cron-hpa-controller:latest
+        image: docker.pkg.github.com/ubie-oss/cron-hpa/cron-hpa-controller:latest
         imagePullPolicy: IfNotPresent
         name: manager
         securityContext:

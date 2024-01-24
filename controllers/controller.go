@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cronhpav1alpha1 "github.com/dtaniwaki/cron-hpa/api/v1alpha1"
+	cronhpav1alpha1 "github.com/ubie-oss/cron-hpa/api/v1alpha1"
 )
 
 // CronHorizontalPodAutoscalerReconciler reconciles a CronHorizontalPodAutoscaler object
@@ -39,11 +39,11 @@ type CronHorizontalPodAutoscalerReconciler struct {
 	Cron     *Cron
 }
 
-const finalizerName = "cron-hpa.dtaniwaki.github.com/finalizer"
+const finalizerName = "cron-hpa.ubie-oss.github.com/finalizer"
 
-//+kubebuilder:rbac:groups=cron-hpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cron-hpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cron-hpa.dtaniwaki.github.com,resources=cronhorizontalpodautoscalers/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cron-hpa.ubie-oss.github.com,resources=cronhorizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cron-hpa.ubie-oss.github.com,resources=cronhorizontalpodautoscalers/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cron-hpa.ubie-oss.github.com,resources=cronhorizontalpodautoscalers/finalizers,verbs=update
 //+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
@@ -90,7 +90,7 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 
 	// Fetch the corresponded HPA instance.
 	logger.Info("Fetch HPA")
-	hpa := &autoscalingv2beta2.HorizontalPodAutoscaler{}
+	hpa := &autoscalingv2.HorizontalPodAutoscaler{}
 	if err := r.Get(ctx, req.NamespacedName, hpa); err != nil {
 		if !errors.IsNotFound(err) {
 			return ctrl.Result{}, err
@@ -119,6 +119,6 @@ func (r *CronHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, r
 func (r *CronHorizontalPodAutoscalerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cronhpav1alpha1.CronHorizontalPodAutoscaler{}).
-		Owns(&autoscalingv2beta2.HorizontalPodAutoscaler{}).
+		Owns(&autoscalingv2.HorizontalPodAutoscaler{}).
 		Complete(r)
 }

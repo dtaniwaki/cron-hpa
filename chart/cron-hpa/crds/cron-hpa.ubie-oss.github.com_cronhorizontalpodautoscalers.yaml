@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: cronhorizontalpodautoscalers.cron-hpa.dtaniwaki.github.com
+  name: cronhorizontalpodautoscalers.cron-hpa.ubie-oss.github.com
 spec:
-  group: cron-hpa.dtaniwaki.github.com
+  group: cron-hpa.ubie-oss.github.com
   names:
     kind: CronHorizontalPodAutoscaler
     listKind: CronHorizontalPodAutoscalerList

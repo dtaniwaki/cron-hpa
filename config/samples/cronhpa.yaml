@@ -1,4 +1,4 @@
-apiVersion: cron-hpa.dtaniwaki.github.com/v1alpha1
+apiVersion: cron-hpa.ubie-oss.github.com/v1alpha1
 kind: CronHorizontalPodAutoscaler
 metadata:
   name: cron-hpa-sample

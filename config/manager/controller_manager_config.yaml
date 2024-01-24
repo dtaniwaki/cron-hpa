@@ -8,4 +8,4 @@ webhook:
   port: 9443
 leaderElection:
   leaderElect: true
-  resourceName: a46ac287.dtaniwaki.github.com
+  resourceName: a46ac287.ubie-oss.github.com
