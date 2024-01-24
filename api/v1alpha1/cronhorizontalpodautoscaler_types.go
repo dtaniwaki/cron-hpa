@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -39,8 +39,8 @@ type TemplateMetadata struct {
 
 // HPATemplate is the template of HPA to create.
 type HPATemplate struct {
-	Metadata *TemplateMetadata                              `json:"metadata,omitempty"`
-	Spec     autoscalingv2beta2.HorizontalPodAutoscalerSpec `json:"spec"`
+	Metadata *TemplateMetadata                         `json:"metadata,omitempty"`
+	Spec     autoscalingv2.HorizontalPodAutoscalerSpec `json:"spec"`
 }
 
 // HPAPatch is a patch applied to the template.
@@ -64,7 +64,7 @@ type HPAPatch struct {
 	// increased, and vice-versa.  See the individual metric source types for
 	// more information about how each type of metric must respond.
 	// +optional
-	Metrics []autoscalingv2beta2.MetricSpec `json:"metrics,omitempty"`
+	Metrics []autoscalingv2.MetricSpec `json:"metrics,omitempty"`
 }
 
 // CronHorizontalPodAutoscalerScheduledPatch is a patch w/ schedule to apply.
