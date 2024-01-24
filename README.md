@@ -8,7 +8,7 @@ CronHPA is an operator to update HPA resources based on schedules. For example, 
 Here's a `CronHPA` example.
 
 ```yaml
-apiVersion: cron-hpa.dtaniwaki.github.com/v1alpha1
+apiVersion: cron-hpa.ubie-oss.github.com/v1alpha1
 kind: CronHorizontalPodAutoscaler
 metadata:
   name: cron-hpa-example
@@ -52,11 +52,11 @@ spec:
 Mark the target HPA resource as below to temporarily skip getting CronHPA's update.
 
 ```yaml
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   annotations:
-    cron-hpa.dtaniwaki.github.com/skip: "true"
+    cron-hpa.ubie-oss.github.com/skip: "true"
 ...
 ```
 
@@ -117,8 +117,8 @@ You will see sample HPA and deployment in the current context, maybe `default` d
 Copyright (c) 2021 Daisuke Taniwaki. See [LICENSE](LICENSE) for details.
 
 
-[godoc-image]: https://pkg.go.dev/badge/github.com/dtaniwaki/cron-hpa.svg
-[godoc-link]: https://pkg.go.dev/github.com/dtaniwaki/cron-hpa
-[cov-image]:   https://coveralls.io/repos/github/dtaniwaki/cron-hpa/badge.svg?branch=main
-[cov-link]:    https://coveralls.io/github/dtaniwaki/cron-hpa?branch=main
+[godoc-image]: https://pkg.go.dev/badge/github.com/ubie-oss/cron-hpa.svg
+[godoc-link]: https://pkg.go.dev/github.com/ubie-oss/cron-hpa
+[cov-image]:   https://coveralls.io/repos/github/ubie-oss/cron-hpa/badge.svg?branch=main
+[cov-link]:    https://coveralls.io/github/ubie-oss/cron-hpa?branch=main
 
