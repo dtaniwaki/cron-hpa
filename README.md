@@ -1,5 +1,7 @@
 # CronHPA
 
+This library is forked from [dtaniwaki/cron-hpa](https://github.com/dtaniwaki/cron-hpa), because we want to relace CronHorizontalPodAutoscaler to ideal state.
+
 [![Go Reference][godoc-image]][godoc-link]
 [![Coverage Status][cov-image]][cov-link]
 
